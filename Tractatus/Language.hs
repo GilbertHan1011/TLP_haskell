@@ -96,13 +96,13 @@ isTautology :: Proposition -> Bool
 isTautology prop = 
     -- 在完整实现中，我们应该检查所有可能的实在
     -- 这里我们检查一些样本实在（包括 theRealWorld 和一些极端情况）
-    let sampleWorlds = [
-            theRealWorld,  -- 实际世界
-            \_ -> True,    -- 所有事实都为真的世界
-            \_ -> False,  -- 所有事实都为假的世界
-            \f -> case f of (IsOn _ _) -> True; _ -> False,  -- 只有 IsOn 为真
-            \f -> case f of (IsColored _ _) -> True; _ -> False  -- 只有 IsColored 为真
-        ]
+    let sampleWorlds = 
+            [ theRealWorld  -- 实际世界
+            , \_ -> True    -- 所有事实都为真的世界
+            , \_ -> False   -- 所有事实都为假的世界
+            , \f -> case f of (IsOn _ _) -> True; _ -> False  -- 只有 IsOn 为真
+            , \f -> case f of (IsColored _ _) -> True; _ -> False  -- 只有 IsColored 为真
+            ]
     in all (flip eval prop) sampleWorlds
 
 -- 检查一个命题是否是矛盾式（在所有可能的世界中都为假）

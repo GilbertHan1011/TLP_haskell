@@ -5,8 +5,12 @@
 -- 这是整个框架的核心。这个模块定义了"逻辑形式"——即"对象"可以如何"合法地"组合成"原子事实"（Sachverhalte）。
 --
 -- 我们将使用 广义代数数据类型 (GADT)，因为它允许我们在数据构造器中编码类型规则。
+--
+-- 改进：
+-- 1. 删除了冗余的 Relation 相关构造器（Relates, StandsIn）
+-- 2. 使用 deriving instance 自动派生 Eq, Ord, Show（因为 CoreTypes 中的所有对象现在都有了正确的 Eq, Ord, Show）
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, StandaloneDeriving #-}
 
 module Tractatus.Logic where
 
@@ -34,16 +38,19 @@ data AtomicFact :: * where
     IsColored :: SpatialObject -> Color -> AtomicFact
     
     -- "Loves" (爱) 这种形式 *必须* 结合两个 Person
+    -- "Loves" *就是* 逻辑形式, 不是一个对象
     Loves :: Person -> Person -> AtomicFact
     
-    -- "Relates" (关系) 这种形式 *必须* 结合一个 Relation 和两个 Person
-    Relates :: Relation -> Person -> Person -> AtomicFact
+    -- "Hates" (恨) 这种形式 *必须* 结合两个 Person
+    Hates :: Person -> Person -> AtomicFact
+    
+    -- "Knows" (知道) 这种形式 *必须* 结合两个 Person
+    Knows :: Person -> Person -> AtomicFact
     
     -- "AtTime" (在...时间) 这种形式 *必须* 结合一个 Person 和一个 Time
     AtTime :: Person -> Time -> AtomicFact
     
-    -- "StandsIn" (处于...关系) 这种形式 *必须* 结合一个 Relation 和两个 Person
-    StandsIn :: Relation -> Person -> Person -> AtomicFact
+    -- 注意：删除了 Relates 和 StandsIn，因为关系不是对象，而是逻辑形式
 
 -- ============================================================================
 -- TLP 1.13: "逻辑空间中的事实就是世界。"
@@ -78,7 +85,7 @@ type LogicalSpace = AtomicFact
 -- 以下代码如果取消注释，将导致编译时错误：
 --
 -- senselessFact :: AtomicFact
--- senselessFact = Loves apple table
+-- senselessFact = Loves Apple Table
 --
 -- {-
 --     ^
@@ -86,31 +93,17 @@ type LogicalSpace = AtomicFact
 --     • Couldn't match type 'SpatialObject' with 'Person'
 --       Expected type: Person
 --         Actual type: SpatialObject
---     • In the first argument of 'Loves', namely 'apple'
+--     • In the first argument of 'Loves', namely 'Apple'
 --     
 --     这就是 TLP 4.003: "有关哲学的大多数命题...不是假的，而是无意义的。"
 --     编译器 (逻辑) 阻止我们 "言说" 这个无意义的命题。
 -- -}
 
--- 导出类型以便其他模块使用
--- 注意：由于对象类型是空类型（undefined），我们使用简化的比较和显示
-instance Eq AtomicFact where
-    (IsOn _ _) == (IsOn _ _) = True
-    (IsColored _ _) == (IsColored _ _) = True
-    (Loves _ _) == (Loves _ _) = True
-    (Relates _ _ _) == (Relates _ _ _) = True
-    (AtTime _ _) == (AtTime _ _) = True
-    (StandsIn _ _ _) == (StandsIn _ _ _) = True
-    _ == _ = False
+-- ============================================================================
+-- 改进：现在我们可以自动派生 Eq, Ord, Show
+-- 因为 CoreTypes.hs 中的所有对象现在都有了正确的 Eq, Ord, Show
+-- ============================================================================
 
-instance Ord AtomicFact where
-    compare a b = EQ  -- 简化：所有原子事实在排序上相等
-
-instance Show AtomicFact where
-    show (IsOn _ _) = "IsOn <SpatialObject> <SpatialObject>"
-    show (IsColored _ _) = "IsColored <SpatialObject> <Color>"
-    show (Loves _ _) = "Loves <Person> <Person>"
-    show (Relates _ _ _) = "Relates <Relation> <Person> <Person>"
-    show (AtTime _ _) = "AtTime <Person> <Time>"
-    show (StandsIn _ _ _) = "StandsIn <Relation> <Person> <Person>"
-
+deriving instance Eq AtomicFact
+deriving instance Ord AtomicFact
+deriving instance Show AtomicFact

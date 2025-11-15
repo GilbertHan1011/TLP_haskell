@@ -3,6 +3,8 @@
 -- (Reality: The World)
 --
 -- "世界"是 实际存在 的事实的总体。"实在"（Reality）是存在和不存在的原子事实的总和。
+--
+-- 改进：现在 worldDB 可以正确区分不同的事实了，因为 AtomicFact 有了正确的 Eq 实例。
 
 module Tractatus.World where
 
@@ -43,23 +45,20 @@ type TheWorld = AtomicFact -> Bool
 -- ============================================================================
 
 -- ============================================================================
--- 我们可以用 Set (集合) 来更直观地定义它
+-- 改进：现在这个集合可以正确区分事实了
+-- (IsOn Apple Table) 不再等于 (IsOn Book Chair)
 -- ============================================================================
 
 worldDB :: Set.Set AtomicFact
 worldDB = Set.fromList
-    [ (IsOn apple table)
-    , (IsColored apple red)
-    , (AtTime john morning)
+    [ (IsOn Apple Table)        -- 这个事实 *存在*
+    , (IsColored Apple Red)      -- 这个事实 *存在*
+    , (AtTime John Morning)      -- 这个事实 *存在*
     ]
 
 -- 主要的"世界"定义，使用 Set 方式
 theRealWorld :: TheWorld
 theRealWorld fact = Set.member fact worldDB
-
--- 注意：由于对象类型是空类型（undefined），模式匹配可能无法精确匹配值。
--- 因此我们使用 Set 和 Eq 实例来定义世界。
--- 在实际应用中，如果需要更精确的匹配，可以使用更复杂的实现。
 
 -- ============================================================================
 -- TLP 2.061: "原子事实是相互独立的。"
@@ -69,4 +68,3 @@ theRealWorld fact = Set.member fact worldDB
 -- (From the existence or non-existence of an atomic fact we cannot infer
 --  the existence or non-existence of another.)
 -- ============================================================================
-

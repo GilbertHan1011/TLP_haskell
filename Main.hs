@@ -3,6 +3,8 @@
 -- (Overview: Execution and Analysis)
 --
 -- 现在我们可以把所有东西放在一起，清晰地展示 TLP 的核心论点。
+--
+-- 改进：使用新的构造函数（Apple 而不是 apple，John 而不是 john）
 
 module Main where
 
@@ -20,19 +22,19 @@ import Tractatus.Language
 
 -- p: "苹果在桌子上"
 p :: Proposition
-p = Elem (IsOn apple table)
+p = Elem (IsOn Apple Table)
 
 -- q: "约翰爱玛丽"
 q :: Proposition
-q = Elem (Relates loves john mary)
+q = Elem (Loves John Mary)
 
 -- r: "苹果是红色的"
 r :: Proposition
-r = Elem (IsColored apple red)
+r = Elem (IsColored Apple Red)
 
 -- s: "约翰在早晨"
 s :: Proposition
-s = Elem (AtTime john morning)
+s = Elem (AtTime John Morning)
 
 -- 复合命题: "苹果在桌子上 并且 约翰不爱玛丽"
 complexProp :: Proposition
@@ -145,12 +147,13 @@ main = do
     putStrLn "   TLP 4.003: '有关哲学的大多数命题...不是假的，而是无意义的。'"
     putStrLn ""
     putStrLn "   如果我们尝试写:"
-    putStrLn "   let nonsense = Elem (Loves apple table)"
+    putStrLn "   let nonsense = Elem (Loves Apple Table)"
     putStrLn "   编译器会报错："
     putStrLn "   • Couldn't match type 'SpatialObject' with 'Person'"
     putStrLn "   这就是'逻辑语法'（类型系统）在起作用。"
     putStrLn ""
     
+
     -- ========================================================================
     -- 7. 框架总结
     -- ========================================================================
@@ -183,4 +186,3 @@ main = do
     putStrLn ""
     putStrLn "编译器 (The Compiler) 强制我们保持沉默 (enforces silence)。"
     putStrLn ""
-

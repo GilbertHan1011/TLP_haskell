@@ -7,6 +7,10 @@
 -- ——即它们能如何与其他对象组合。
 --
 -- 在 Haskell 中，"对象的形式"就是"类型"（Type）。
+--
+-- 改进：使用数据构造函数作为"简单对象"，消除 undefined 的问题。
+-- TLP 2.02: "对象是简单的。" 意味着对象不应该有 undefined 的实现。
+-- 对象就是它自身。"名称"和"对象"是统一的。
 
 module Tractatus.CoreTypes where
 
@@ -26,85 +30,48 @@ module Tractatus.CoreTypes where
 -- TLP 2.0251: "空间、时间和颜色（有色性）是对象的形式。"
 -- (Space, time and colour (colouredness) are forms of objects.)
 --
--- [Objects are Types. They are 'forms', not 'values'.]
--- [Possibility is the Type Signature. A 'Thing' is a 'value' of a specific type.]
--- ============================================================================
-
--- 我们使用空的 `data` 声明来定义"形式"（类型）。
--- 它们本身没有"值"，它们只是"可能性"的分类。
-
-data SpatialObject  -- "空间对象"这种形式
-data Color          -- "颜色"这种形式
-data Person         -- "人"这种形式
-data Relation       -- "关系"这种形式
-data Time           -- "时间"这种形式
-
--- ============================================================================
 -- TLP 3.202: "命题中所运用的简单符号称为名称。"
 -- (The simple signs employed in propositions are called names.)
 --
 -- TLP 3.203: "名称意指对象。对象是它的意谓。"
 -- (The name means the object. The object is its meaning.)
 --
--- "名称"(Name) 是这些"形式"(Type) 的具体"值"。
--- 我们使用类型签名来"给予"名称它们的"意谓"（类型）。
--- :: 的意思是 "具有...的形式" (is of the form)
+-- [改进] "形式" (Type) 是 "Color"
+-- "简单对象" (Objects) 是 "Red", "Green", "Blue", "Yellow"
+-- "名称"和"对象"是统一的。Red 就是 Red。
 -- ============================================================================
 
-apple :: SpatialObject
-apple = undefined  -- 我们不需要它的具体实现，只需要它的类型
+-- "形式" (Type) 是 "Color"
+-- "简单对象" (Objects) 是 "Red", "Green", "Blue", "Yellow"
+-- "名称"和"对象"是统一的。Red 就是 Red。
+data Color = Red | Green | Blue | Yellow
+    deriving (Eq, Ord, Show)
 
-table :: SpatialObject
-table = undefined
+-- "形式" (Type) 是 "Person"
+-- "简单对象" (Objects) 是 "John", "Mary", "Alice", "Bob"
+-- "名称"和"对象"是统一的。John 就是 John。
+data Person = John | Mary | Alice | Bob
+    deriving (Eq, Ord, Show)
 
-book :: SpatialObject
-book = undefined
+-- "形式" (Type) 是 "SpatialObject"
+-- "简单对象" (Objects) 是 "Apple", "Table", "Book", "Chair"
+-- "名称"和"对象"是统一的。Apple 就是 Apple。
+data SpatialObject = Apple | Table | Book | Chair
+    deriving (Eq, Ord, Show)
 
-chair :: SpatialObject
-chair = undefined
+-- "形式" (Type) 是 "Time"
+-- "简单对象" (Objects) 是 "Morning", "Noon", "Evening", "Night"
+-- "名称"和"对象"是统一的。Morning 就是 Morning。
+data Time = Morning | Noon | Evening | Night
+    deriving (Eq, Ord, Show)
 
-red :: Color
-red = undefined
-
-blue :: Color
-blue = undefined
-
-green :: Color
-green = undefined
-
-yellow :: Color
-yellow = undefined
-
-john :: Person
-john = undefined
-
-mary :: Person
-mary = undefined
-
-alice :: Person
-alice = undefined
-
-bob :: Person
-bob = undefined
-
-loves :: Relation
-loves = undefined
-
-hates :: Relation
-hates = undefined
-
-knows :: Relation
-knows = undefined
-
-morning :: Time
-morning = undefined
-
-noon :: Time
-noon = undefined
-
-evening :: Time
-evening = undefined
-
-night :: Time
-night = undefined
-
+-- ============================================================================
+-- 注意：我们删除了 `data Relation`，因为它不是一个"对象"。
+-- 
+-- TLP 2.01: "原子事实是对象的结合。"
+-- "爱"不是一个像 john 或 apple 那样的"事物"或"对象"；
+-- 它是 john 和 mary 之间的一种"结合方式"或"结构"。
+-- 
+-- 在 Logic.hs 中定义的 Loves :: Person -> Person -> AtomicFact
+-- 已经完美地捕捉到了这一点。"Loves"就是这个"逻辑形式"。
+-- ============================================================================
