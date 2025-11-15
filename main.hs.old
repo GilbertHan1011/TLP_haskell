@@ -1,0 +1,755 @@
+-- TRACTATUS_LOGICO_PHILOSOPHICUS.hs
+-- 这是一个世界的"逻辑形式"的规范。
+-- (This is the specification for the "Logical Form" of the World.)
+--
+-- "我的命题是通过以下方式起阐明作用的：
+--  理解我的人，当他通过这些命题——根据这些命题，越过这些命题（他可以说是在爬上梯子之后把梯子抛掉了）——
+--  终于知道它们是无意义的。他必须排除这些命题，那时他才能正确地看世界。"
+-- (My propositions are elucidatory in this way: he who understands me finally recognizes them as senseless,
+--  when he has climbed out through them, on them, over them. He must so to speak throw away the ladder,
+--  after he has climbed up on it. He must surmount these propositions; then he sees the world rightly.)
+
+
+module Tractatus (
+    -- Objects and Facts
+    SpatialObject(..),
+    Color(..),
+    Person(..),
+    Relation(..),
+    Time(..),
+    AtomicFact(..),
+    LogicalSpace,
+    Reality,
+    World,
+    theWorld,
+    
+    -- Propositions and Language
+    Proposition,
+    ElementaryProposition,
+    Language,
+    
+    -- Pictures and Representation
+    Drawing(..),
+    DrawingElement(..),
+    sense,
+    isTrue,
+    
+    -- Logical Operations
+    op_not,
+    op_and,
+    op_or,
+    op_implies,
+    op_iff,
+    op_nand,
+    
+    -- Tautologies and Contradictions
+    isTautology,
+    isContradiction,
+    law_of_contradiction,
+    law_of_excluded_middle,
+    
+    -- Type System as Logical Grammar
+    isSenseless,
+    isWellFormed,
+    
+    -- Examples
+    p, q, r,
+    complexProposition,
+    
+    -- Logical Form
+    LogicalForm(..),
+    showLogicalForm
+) where
+
+import qualified Data.Set as Set
+
+-- ============================================================================
+-- 1. THE WORLD
+-- ============================================================================
+
+-- 1 "世界是所有实际情况的总和。"
+-- (The world is everything that is the case.)
+
+-- 1.1 "世界是事实的总体，而不是事物的总体。"
+-- (The world is the totality of facts, not of things.)
+
+-- 1.11 "世界由诸事实所规定，并由'这些事实就是全部事实'这一点所规定。"
+-- (The world is determined by the facts, and by these being all the facts.)
+
+-- 1.12 "因为事实的总体既规定了实际情况，也规定了所有非实际情况。"
+-- (For the totality of facts determines both what is the case, and also all that is not the case.)
+
+-- 1.13 "逻辑空间中的事实就是世界。"
+-- (The facts in logical space are the world.)
+
+-- 1.2 "世界分解为诸事实。"
+-- (The world divides into facts.)
+
+-- 1.21 "任何一个事实，都可以是实际情况，也可以不是，而其他一切则保持不变。"
+-- (Any one can either be the case or not be the case, and everything else remain the same.)
+
+-- ============================================================================
+-- 2. WHAT IS THE CASE - THE FACT - IS THE EXISTENCE OF ATOMIC FACTS
+-- ============================================================================
+
+-- 2 "实际情况，即事实，是诸原子事实的存在。"
+-- (What is the case, the fact, is the existence of atomic facts.)
+
+-- 2.01 "原子事实是对象（实体、事物）的结合。"
+-- (An atomic fact is a combination of objects (entities, things).)
+
+-- 2.011 "一个事物能够成为原子事实的组成部分，这对于该事物来说是本质性的。"
+-- (It is essential to a thing that it can be a constituent part of an atomic fact.)
+
+-- 2.012 "在逻辑中，没有偶然的东西：如果一个事物能够在原子事实中出现，那么该原子事实的可能性
+--        必须已经预先包含在该事物之中了。"
+-- (In logic nothing is accidental: if a thing can occur in an atomic fact
+--  the possibility of that atomic fact must already be prejudged in the thing.)
+
+-- 2.0121 "如果对于一个能够独立存在的事物来说，后来一个事态能够适合它，那么这看起来就像是偶然的。"
+-- (It would, so to speak, appear as an accident, when to a thing that could exist alone on its own account,
+--  subsequently a state of affairs could be made to fit.)
+
+-- 2.0122 "事物是独立的，因为它能够出现在所有可能的情况中，但这种独立的形式是与原子事实相联系的形式，
+--         是一种依赖的形式。（一个词在命题中以两种不同的方式出现是不可能的。）"
+-- (The thing is independent, in so far as it can occur in all possible circumstances,
+--  but this form of independence is a form of connexion with the atomic fact, a form of dependence.)
+
+-- 2.0123 "如果我知道一个对象，那么我也知道它在原子事实中的所有可能性。"
+-- (If I know an object, then I also know all the possibilities of its occurrence in atomic facts.)
+
+-- 2.01231 "为了认识一个对象，我必须认识的不是它的外在性质，而是它的所有内在性质。"
+-- (In order to know an object, I must know not its external but all its internal qualities.)
+
+-- 2.0124 "如果所有对象都已给出，那么所有可能的原子事实也就此给出。"
+-- (If all objects are given, then thereby are all possible atomic facts also given.)
+
+-- 2.013 "每一个事物，可以说，都是处在可能原子事实的空间之中。"
+-- (Every thing is, as it were, in a space of possible atomic facts.)
+
+-- 2.0131 "空间对象必须处在无限空间之中。（空间中的一个点就是一个主目位置。）"
+-- (A spatial object must lie in infinite space. (A point in space is a place for an argument.))
+
+-- 2.014 "对象包含所有事态的可能性。"
+-- (Objects contain the possibility of all states of affairs.)
+
+-- 2.0141 "对象在原子事实中出现的可能性，就是对象的形式。"
+-- (The possibility of its occurrence in atomic facts is the form of the object.)
+
+-- 2.02 "对象是简单的。"
+-- (The object is simple.)
+
+-- 2.0201 "关于复合物的每一个陈述都可以分解为关于其组成部分的陈述，以及那些完全描述这些复合物的命题。"
+-- (Every statement about complexes can be analysed into a statement about their constituent parts,
+--  and into those propositions which completely describe the complexes.)
+
+-- 2.021 "对象构成世界的实体。因此它们不能是复合的。"
+-- (Objects form the substance of the world. Therefore they cannot be compound.)
+
+-- 2.0211 "如果世界没有实体，那么一个命题是否有意义，就要取决于另一个命题是否为真。"
+-- (If the world had no substance, then whether a proposition had sense would depend on
+--  whether another proposition was true.)
+
+-- 2.0212 "那样的话，就不可能形成世界的图像（真的或假的）。"
+-- (It would then be impossible to form a picture of the world (true or false).)
+
+-- 2.022 "显然，一个想象的世界，无论它如何不同于真实的世界，都必须与真实世界有某种共同的东西——一种形式。"
+-- (It is clear that however different from the real one an imagined world may be,
+--  it must have something—a form—in common with the real world.)
+
+-- 2.023 "这种固定的形式由对象构成。"
+-- (This fixed form consists of the objects.)
+
+-- 2.0231 "世界的实体只能规定一种形式，而不能规定任何物质属性。因为这些首先由命题来呈现——
+--         首先由对象的配置来形成。"
+-- (The substance of the world can only determine a form and not any material properties.
+--  For these are first presented by the propositions—first formed by the configuration of the objects.)
+
+-- 2.0232 "大致说来：对象是无色的。"
+-- (Roughly speaking: objects are colourless.)
+
+-- 2.0233 "两个具有相同逻辑形式的对象——除了它们的外部性质之外——只是通过它们是不同的这一点来相互区别的。"
+-- (Two objects of the same logical form are—apart from their external properties—
+--  only differentiated from one another in that they are different.)
+
+-- 2.024 "实体是独立于实际情况而存在的东西。"
+-- (Substance is what exists independently of what is the case.)
+
+-- 2.025 "它是形式和内容。"
+-- (It is form and content.)
+
+-- 2.0251 "空间、时间和颜色（有色性）是对象的形式。"
+-- (Space, time and colour (colouredness) are forms of objects.)
+
+-- 2.026 "只有当有对象时，才能有世界的固定形式。"
+-- (Only if there are objects can there be a fixed form of the world.)
+
+-- 2.027 "固定的、存在的和对象是同一的。"
+-- (The fixed, the existent and the object are one.)
+
+-- 2.0271 "对象是固定的、存在的；配置是变化的、可变的。"
+-- (The object is the fixed, the existent; the configuration is the changing, the variable.)
+
+-- 2.0272 "对象的配置组成了原子事实。"
+-- (The configuration of the objects forms the atomic fact.)
+
+-- 2.03 "在原子事实中，对象像链条的环节一样相互连接。"
+-- (In the atomic fact objects hang one in another, like the members of a chain.)
+
+-- 2.031 "在原子事实中，对象以确定的方式结合在一起。"
+-- (In the atomic fact the objects are combined in a definite way.)
+
+-- 2.032 "对象在原子事实中相互连接的方式，就是原子事实的结构。"
+-- (The way in which objects hang together in the atomic fact is the structure of the atomic fact.)
+
+-- 2.033 "形式是结构的可能性。"
+-- (The form is the possibility of the structure.)
+
+-- 2.034 "事实的结构由原子事实的结构组成。"
+-- (The structure of the fact consists of the structures of the atomic facts.)
+
+-- 2.04 "存在的原子事实的总体就是世界。"
+-- (The totality of existent atomic facts is the world.)
+
+-- 2.05 "存在的原子事实的总体也决定了哪些原子事实不存在。"
+-- (The totality of existent atomic facts also determines which atomic facts do not exist.)
+
+-- 2.06 "原子事实的存在和不存在就是实在。"
+-- (The existence and non-existence of atomic facts is the reality.)
+
+-- 2.061 "原子事实是相互独立的。"
+-- (Atomic facts are independent of one another.)
+
+-- 2.062 "从一个原子事实的存在或不存在，我们不能推断另一个原子事实的存在或不存在。"
+-- (From the existence or non-existence of an atomic fact we cannot infer
+--  the existence or non-existence of another.)
+
+-- 2.063 "全部实在就是世界。"
+-- (The total reality is the world.)
+
+-- [Objects are Types. They are 'forms', not 'values'.]
+-- [Possibility is the Type Signature. A 'Thing' is a 'value' of a specific type.]
+-- [An 'AtomicFact' is a Data Structure.]
+-- [Logical Space is the *set of all* possible, well-typed 'values' of the type AtomicFact.]
+-- [Reality is a function that maps every 'possible fact' in Logical Space to a Boolean value (True or False).]
+-- [The 'World' is one specific 'instance' of Reality.]
+
+-- Object types (forms)
+data SpatialObject = Apple | Table | Book | Chair deriving (Eq, Ord, Show)
+data Color = Red | Blue | Green | Yellow deriving (Eq, Ord, Show)
+data Person = John | Mary | Alice | Bob deriving (Eq, Ord, Show)
+data Relation = Loves | Hates | Knows deriving (Eq, Ord, Show)
+data Time = Morning | Noon | Evening | Night deriving (Eq, Ord, Show)
+
+-- Atomic facts: combinations of objects
+data AtomicFact = IsOn SpatialObject SpatialObject
+                | IsColored SpatialObject Color
+                | Relates Relation Person Person
+                | AtTime Person Time
+                | StandsIn Relation Person Person
+                deriving (Eq, Ord, Show)
+
+-- Logical Space: the set of all possible atomic facts
+type LogicalSpace = Set.Set AtomicFact
+
+-- Reality: a function mapping atomic facts to truth values
+type Reality = AtomicFact -> Bool
+
+-- World: a specific instance of Reality
+type World = Reality
+
+-- Example world
+theWorld :: World
+theWorld fact =
+    case fact of
+        (IsOn Apple Table)        -> True
+        (IsColored Apple Red)      -> True
+        (Relates Loves John Mary)  -> False
+        (AtTime John Morning)      -> True
+        _                          -> False
+
+-- ============================================================================
+-- 2.1 - 2.2: PICTURES
+-- ============================================================================
+
+-- 2.1 "我们给自己制作事实的图像。"
+-- (We make to ourselves pictures of facts.)
+
+-- 2.11 "图像在逻辑空间中呈现事实，呈现原子事实的存在和不存在。"
+-- (The picture presents the facts in logical space, the existence and non-existence of atomic facts.)
+
+-- 2.12 "图像是实在的模型。"
+-- (The picture is a model of reality.)
+
+-- 2.13 "在图像中，图像的要素对应于对象。"
+-- (To the objects correspond in the picture the elements of the picture.)
+
+-- 2.131 "图像的要素在图像中代表对象。"
+-- (The elements of the picture stand, in the picture, for the objects.)
+
+-- 2.14 "图像在于其要素以确定的方式相互结合。"
+-- (The picture consists in the fact that its elements are combined with one another in a definite way.)
+
+-- 2.141 "图像是一个事实。"
+-- (The picture is a fact.)
+
+-- 2.15 "图像的要素以确定的方式相互结合，这件事代表了事物就是如此这般地相互结合。"
+-- (That the elements of the picture are combined with one another in a definite way,
+--  represents that the things are so combined with one another.)
+
+-- 2.151 "表现形式是事物能够像图像的要素那样相互结合的可能性。"
+-- (The form of representation is the possibility that the things are combined with one another
+--  as are the elements of the picture.)
+
+-- 2.1511 "这样，图像就与实在联系起来了；它一直达到实在。"
+-- (Thus the picture is linked with reality; it reaches up to it.)
+
+-- 2.1512 "它像一把尺子一样放在实在上。"
+-- (It is like a scale applied to reality.)
+
+-- 2.16 "为了成为图像，一个事实必须与它所表现的东西有某种共同之处。"
+-- (In order to be a picture a fact must have something in common with what it pictures.)
+
+-- 2.161 "在图像和被表现的东西中，必须有某种相同的东西，以便一个能够成为另一个的图像。"
+-- (In the picture and the pictured there must be something identical in order that
+--  the one can be a picture of the other at all.)
+
+-- 2.17 "图像为了能够按照自己的方式——正确地或错误地——表现实在而必须与实在共同具有的东西，
+--       就是它的表现形式。"
+-- (What the picture must have in common with reality in order to be able to represent it
+--  after its manner—rightly or falsely—is its form of representation.)
+
+-- 2.18 "每一个图像，无论它具有什么形式，为了能够一般地——正确地或错误地——表现实在而必须与实在共同具有的东西，
+--       就是逻辑形式，亦即实在的形式。"
+-- (What every picture, of whatever form, must have in common with reality in order to be able
+--  to represent it at all—rightly or falsely—is the logical form, that is, the form of reality.)
+
+-- 2.181 "如果表现形式是逻辑形式，那么图像就叫做逻辑图像。"
+-- (If the form of representation is the logical form, then the picture is called a logical picture.)
+
+-- 2.182 "每一个图像也是逻辑图像。（另一方面，例如，并非每一个图像都是空间图像。）"
+-- (Every picture is also a logical picture. (On the other hand, for example, not every picture is spatial.))
+
+-- 2.19 "逻辑图像能够表现世界。"
+-- (The logical picture can depict the world.)
+
+-- 2.2 "图像与它所表现的东西共同具有逻辑表现形式。"
+-- (The picture has the logical form of representation in common with what it pictures.)
+
+-- 2.201 "图像通过表现原子事实的存在和不存在的可能性来表现实在。"
+-- (The picture depicts reality by representing a possibility of the existence and non-existence of atomic facts.)
+
+-- 2.202 "图像表现逻辑空间中的一种可能事态。"
+-- (The picture represents a possible state of affairs in logical space.)
+
+-- 2.203 "图像包含它所表现的事态的可能性。"
+-- (The picture contains the possibility of the state of affairs which it represents.)
+
+-- 2.21 "图像与实在一致或不一致；它是正确的或错误的，是真的或假的。"
+-- (The picture agrees with reality or not; it is right or wrong, true or false.)
+
+-- 2.221 "图像所表现的东西，是它的意义。"
+-- (What the picture represents is its sense.)
+
+-- 2.222 "它的真或假在于它的意义与实在的一致或不一致。"
+-- (In the agreement or disagreement of its sense with reality, its truth or falsity consists.)
+
+-- 2.223 "要发现图像是真是假，我们必须把它与实在相比较。"
+-- (In order to discover whether the picture is true or false we must compare it with reality.)
+
+-- [A 'Picture' is *another* data structure, which is itself a fact.]
+-- [Logical Form is the isomorphic data structure.]
+-- [Sense is a mapping function from the 'Picture' to the 'possible fact' it 'represents'.]
+-- [Truth is a 'runtime' check to see if the 'Picture's Sense' is in the 'theWorld' database.]
+
+data DrawingElement = AppleDrawing | TableDrawing | PersonDrawing Person | ColorDrawing Color
+                    deriving (Eq, Show)
+
+data Drawing = DrawnOn DrawingElement DrawingElement
+             | DrawnColored DrawingElement Color
+             | DrawnRelates Relation DrawingElement DrawingElement
+             deriving (Eq, Show)
+
+-- Sense: mapping from picture to atomic fact
+sense :: Drawing -> Maybe AtomicFact
+sense (DrawnOn AppleDrawing TableDrawing) = Just (IsOn Apple Table)
+sense (DrawnColored AppleDrawing (ColorDrawing Red)) = Just (IsColored Apple Red)
+sense (DrawnColored AppleDrawing Red) = Just (IsColored Apple Red)
+sense (DrawnRelates Loves (PersonDrawing John) (PersonDrawing Mary)) = Just (Relates Loves John Mary)
+sense _ = Nothing
+
+-- Truth: checking if picture agrees with reality
+isTrue :: Drawing -> Reality -> Bool
+isTrue picture reality = case sense picture of
+    Just fact -> reality fact
+    Nothing   -> False
+
+-- ============================================================================
+-- 3. THE LOGICAL PICTURE OF THE FACTS IS THE THOUGHT
+-- ============================================================================
+
+-- 3 "事实的逻辑图像是思想。"
+-- (The logical picture of the facts is the thought.)
+
+-- 3.01 "真的思想的总体就是一幅世界的图像。"
+-- (The totality of true thoughts is a picture of the world.)
+
+-- 3.1 "在命题中，思想通过感官被表达出来。"
+-- (In the proposition the thought is expressed perceptibly through the senses.)
+
+-- 3.14 "命题符号在于它的诸要素（语词）以确定的方式相结合。"
+-- (The propositional sign consists in the fact that its elements, the words, are combined in it in a definite way.)
+
+-- 3.202 "命题中所运用的简单符号称为名称。"
+-- (The simple signs employed in propositions are called names.)
+
+-- 3.203 "名称意指对象。对象是它的意义。"
+-- (The name means the object. The object is its meaning.)
+
+-- 3.3 "只有命题才有意义；只有在命题的联系中，名称才有意谓。"
+-- (Only the proposition has sense; only in the context of a proposition has a name meaning.)
+
+-- [This is exactly what our model shows:
+--  `apple` (Name) `:: SpatialObject` (Object/Meaning).
+--  `apple` by itself has no 'Sense'.
+--  `IsOn apple table` (Proposition) `:: AtomicFact` (Sense/Thought).]
+
+-- ============================================================================
+-- 3.03 - 3.325: LOGICAL GRAMMAR
+-- ============================================================================
+
+-- 3.03 "我们不能思考任何不合逻辑的东西..."
+-- (We cannot think anything unlogical...)
+
+-- 3.032 "要在语言中表现任何'违背逻辑的'东西是不可能的..."
+-- (To present in language anything which 'contradicts logic' is as impossible as...)
+
+-- 3.325 "为了避免这些错误，我们必须使用一种遵从'逻辑语法'的符号系统"
+-- (In order to avoid these errors, we must employ a symbolism which obeys... 'logical grammar'...)
+
+-- [An 'unlogical' or 'senseless' proposition is a 'Type Error'.]
+
+-- Type system enforces logical grammar
+isSenseless :: ()
+isSenseless =
+    -- The following would be a compile-time error:
+    -- (Relates Loves Apple Table)
+    -- 
+    -- [^ COMPILE-TIME ERROR:]
+    -- [Couldn't match type 'SpatialObject' with 'Person'.]
+    -- [Expected type: Person, Actual type: SpatialObject.]
+    --
+    -- [This proposition is 'senseless' because it violates 'logical grammar' (the type system).]
+    --
+    -- 4.003 "有关哲学的大多数命题和问题，不是假的，而是无意义的。"
+    -- (Most propositions and questions... are not false, but senseless.)
+    --
+    -- [e.g. "whether the Good is more or less identical than the Beautiful?"]
+    -- (moreIdentical TheGood TheBeautiful)
+    -- [^ TYPE ERROR: 'TheGood' is not a 'Thing'. 'moreIdentical' is not a valid 'Relation'.]
+    ()
+
+-- ============================================================================
+-- 4. THE THOUGHT IS THE SIGNIFICANT PROPOSITION
+-- ============================================================================
+
+-- 4 "思想是有意义的命题。"
+-- (The thought is the significant proposition.)
+
+-- 4.001 "命题的总体就是语言。"
+-- (The totality of propositions is the language.)
+
+-- [Language is the set of all 'well-typed' propositions.]
+
+-- 4.01 "命题是实在的图像。"
+-- (The proposition is a picture of reality.)
+
+-- 4.02 "我们从以下事实看出这一点：我们理解命题符号的意义，而无需向我们解释。"
+-- (This we see from the fact that we understand the sense of the propositional sign,
+--  without having had it explained to us.)
+
+-- 4.021 "命题是实在的图像，因为如果我理解命题，我就知道它所表现的事态。"
+-- (The proposition is a picture of reality, for I know the state of affairs presented by it,
+--  if I understand the proposition.)
+
+-- 4.022 "命题显示其意义。"
+-- (The proposition shows its sense.)
+
+-- 4.023 "命题确定实在到这种程度，即人们只需要对它说'是'或'否'，就能使它符合实在。"
+-- (The proposition determines reality to this extent, that one only needs to say 'Yes' or 'No'
+--  to it to make it agree with reality.)
+
+-- 4.024 "理解一个命题意味着知道如果它是真的，情况是怎样的。"
+-- (To understand a proposition means to know what is the case, if it is true.)
+
+-- 4.1 "命题表现原子事实的存在和不存在。"
+-- (A proposition presents the existence and non-existence of atomic facts.)
+
+-- 4.11 "真命题的总体就是全部自然科学（或各门自然科学的总体）。"
+-- (The totality of true propositions is the total natural science (or the totality of the natural sciences).)
+
+-- 4.12 "命题能够表现全部实在，但是它们不能表现它们为了能够表现实在而必须与实在共同具有的东西——逻辑形式。"
+-- (Propositions can represent the whole reality, but they cannot represent what they must have
+--  in common with reality in order to be able to represent it—the logical form.)
+
+-- 4.121 "命题不能表现逻辑形式：它反映在命题中。"
+-- (Propositions cannot represent the logical form: this mirrors itself in the propositions.)
+
+-- 4.1212 "能够显示的东西，不能说出来。"
+-- (What can be shown cannot be said.)
+
+-- 4.2 "命题的意义是它与原子事实的存在和不存在的可能性的符合与不符合。"
+-- (The sense of a proposition is its agreement and disagreement with the possibilities
+--  of the existence and non-existence of the atomic facts.)
+
+-- 4.21 "最简单的命题，即基本命题，断言一个原子事实的存在。"
+-- (The simplest proposition, the elementary proposition, asserts the existence of an atomic fact.)
+
+-- 4.22 "基本命题由名称组成。它是名称的联结、连接。"
+-- (The elementary proposition consists of names. It is a connexion, a concatenation, of names.)
+
+-- 4.25 "如果基本命题是真的，原子事实就存在；如果基本命题是假的，原子事实就不存在。"
+-- (If the elementary proposition is true, the atomic fact exists; if it is false the atomic fact does not exist.)
+
+-- 4.26 "所有真基本命题的说明完全描述了世界。世界通过所有基本命题加上关于它们哪些是真的、哪些是假的的说明而被完全描述。"
+-- (The specification of all true elementary propositions describes the world completely.
+--  The world is completely described by the specification of all elementary propositions
+--  plus the specification, which of them are true and which false.)
+
+-- 4.3 "基本命题的真值可能性意味着原子事实的存在和不存在的可能性。"
+-- (The truth-possibilities of the elementary propositions mean the possibilities
+--  of the existence and non-existence of the atomic facts.)
+
+-- 4.4 "命题是与基本命题的真值可能性的符合与不符合的表达。"
+-- (A proposition is the expression of agreement and disagreement with the truth-possibilities
+--  of the elementary propositions.)
+
+-- 4.41 "基本命题的真值可能性是命题的真和假的条件。"
+-- (The truth-possibilities of the elementary propositions are the conditions of the truth and falsehood of the propositions.)
+
+-- 4.431 "与基本命题的真值可能性的符合与不符合的表达表达了命题的真值条件。"
+-- (The expression of the agreement and disagreement with the truth-possibilities of the elementary propositions
+--  expresses the truth-conditions of the proposition.)
+
+-- 4.46 "在可能的真值条件组中，有两种极端情况。"
+-- (Among the possible groups of truth-conditions there are two extreme cases.)
+
+-- 4.461 "命题显示它所说的东西，重言式和矛盾式显示它们什么也没说。"
+-- (The proposition shows what it says, the tautology and the contradiction that they say nothing.)
+
+-- 4.4611 "重言式和矛盾式不是无意义的；它们是符号系统的一部分，正如'0'是算术符号系统的一部分一样。"
+-- (Tautology and contradiction are, however, not senseless; they are part of the symbolism,
+--  in the same way that '0' is part of the symbolism of Arithmetic.)
+
+-- 4.462 "重言式和矛盾式不是实在的图像。它们不表现任何可能的事态。"
+-- (Tautology and contradiction are not pictures of the reality. They present no possible state of affairs.)
+
+-- 4.463 "真值条件确定了留给事实的范围。"
+-- (The truth-conditions determine the range, which is left to the facts by the proposition.)
+
+-- [We redefine a 'Proposition' as a 'function' that takes a 'Reality' and returns a 'Bool'.]
+-- [An 'elementary proposition' (p) is a function that checks just *one* fact.]
+
+type Proposition = Reality -> Bool
+
+type ElementaryProposition = Proposition
+
+type Language = Set.Set Proposition
+
+-- Elementary propositions
+p :: ElementaryProposition
+p reality = reality (IsOn Apple Table)
+
+q :: ElementaryProposition
+q reality = reality (Relates Loves John Mary)
+
+r :: ElementaryProposition
+r reality = reality (IsColored Apple Red)
+
+-- ============================================================================
+-- 5. PROPOSITIONS ARE TRUTH-FUNCTIONS OF ELEMENTARY PROPOSITIONS
+-- ============================================================================
+
+-- 5 "命题是基本命题的真值函项。"
+-- (Propositions are truth-functions of elementary propositions.)
+
+-- 5.01 "基本命题是命题的真值自变项。"
+-- (The elementary propositions are the truth-arguments of propositions.)
+
+-- 5.2341 "否定、逻辑加法、逻辑乘法等等都是'操作'。"
+-- (Denial, logical addition, logical multiplication... are operations.)
+
+-- Logical operations
+op_not :: Proposition -> Proposition
+op_not prop = \reality -> not (prop reality)
+
+op_and :: Proposition -> Proposition -> Proposition
+op_and p1 p2 = \reality -> (p1 reality) && (p2 reality)
+
+op_or :: Proposition -> Proposition -> Proposition
+op_or p1 p2 = \reality -> (p1 reality) || (p2 reality)
+
+op_implies :: Proposition -> Proposition -> Proposition
+op_implies p1 p2 = \reality -> not (p1 reality) || (p2 reality)
+
+op_iff :: Proposition -> Proposition -> Proposition
+op_iff p1 p2 = \reality -> (p1 reality) == (p2 reality)
+
+op_nand :: Proposition -> Proposition -> Proposition
+op_nand p1 p2 = op_not (op_and p1 p2)
+
+-- 5.3 "所有命题都是对基本命题进行真值操作的结果。"
+-- (All propositions are results of truth-operations on the elementary propositions.)
+
+complexProposition :: Proposition
+complexProposition = op_and p (op_not q)
+
+-- ============================================================================
+-- 6. THE GENERAL FORM OF TRUTH-FUNCTION
+-- ============================================================================
+
+-- 6 "真值函项的一般形式是：[p, ξ, N(ξ)]。"
+-- (The general form of truth-function is: [p, ξ, N(ξ)].)
+
+-- 6.1 "逻辑的命题是重言式。"
+-- (The propositions of logic are tautologies.)
+
+-- 6.11 "逻辑的命题因此不作任何陈述。（它们是分析命题。）"
+-- (The propositions of logic therefore say nothing. (They are the analytical propositions.))
+
+-- 6.113 "逻辑命题的特征是：人们*仅凭符号*就能认识到它们是真的..."
+-- (It is the characteristic mark of logical propositions that one can perceive *in the symbol alone* that they are true...)
+
+-- [A 'Tautology' is a proposition that *always* returns True, *regardless* of the 'Reality'.
+--  The compiler (Logic) *can* statically prove this.]
+
+-- Check if a proposition is a tautology (always true)
+isTautology :: Proposition -> Bool
+isTautology prop = 
+    -- In a complete implementation, we would check all possible realities
+    -- For now, we check a sample of realities
+    let sampleRealities = [
+            theWorld,
+            \f -> case f of (IsOn Apple Table) -> False; _ -> True,
+            \f -> case f of (IsOn Apple Table) -> True; _ -> False,
+            \_ -> True,
+            \_ -> False
+        ]
+    in all prop sampleRealities
+
+-- Check if a proposition is a contradiction (always false)
+isContradiction :: Proposition -> Bool
+isContradiction prop = isTautology (op_not prop)
+
+-- Law of contradiction: ~(p & ~p)
+law_of_contradiction :: Proposition
+law_of_contradiction = op_not (op_and p (op_not p))
+
+-- Law of excluded middle: p | ~p
+law_of_excluded_middle :: Proposition
+law_of_excluded_middle = op_or p (op_not p)
+
+-- [Check:]
+-- [ reality(p) = True  -> not (True && (not True)) -> not (False) -> True ]
+-- [ reality(p) = False -> not (False && (not False)) -> not (False) -> True ]
+--
+-- [This proposition is true, but it tells us nothing *about* `theWorld`. It 'says nothing'.]
+
+-- 6.13 "逻辑是世界的反映。"
+-- (Logic is a reflexion of the world.)
+
+-- 6.124 "逻辑命题描述世界的'脚手架'，或者说，表现它。"
+-- (The logical propositions describe the scaffolding of the world, or rather they present it.)
+
+-- [Logic *is* this file itself: `data AtomicFact = ...`
+--  This 'type system' *is* the 'scaffolding of the world'.]
+
+-- ============================================================================
+-- 6.4 - 6.54: ETHICS, AESTHETICS, AND THE LADDER
+-- ============================================================================
+
+-- 6.4 "所有命题都有同等的价值。"
+-- (All propositions are of equal value.)
+
+-- 6.41 "世界的意义必定在于世界之外。"
+-- (The sense of the world must lie outside the world.)
+
+-- 6.42 "所以也不可能有伦理学的命题。"
+-- (Hence also there can be no ethical propositions.)
+
+-- 6.421 "显然，伦理学是不能表达的。"
+-- (It is clear that ethics cannot be expressed.)
+
+-- 6.43 "如果善的或恶的意志改变世界，那么它只能改变世界的界限，而不能改变事实；
+--       不能改变能够用语言表达的东西。"
+-- (If good or bad willing changes the world, it can only change the limits of the world,
+--  not the facts; not the things that can be expressed in language.)
+
+-- 6.44 "世界是怎样的，这并不神秘，而世界存在着，这一点是神秘的。"
+-- (Not how the world is, is the mystical, but that it is.)
+
+-- 6.45 "在世界中把世界看作一个有限整体的感觉，是神秘的感觉。"
+-- (The contemplation of the world sub specie aeterni is its contemplation as a limited whole.
+--  The feeling of the world as a limited whole is the mystical feeling.)
+
+-- 6.5 "对于一个不能表达的答案，问题也不能表达。"
+-- (For an answer which cannot be expressed the question too cannot be expressed.)
+
+-- 6.52 "我们觉得，即使所有可能的科学问题都被回答了，生活的问题也仍然完全没有被触及。"
+-- (We feel that even if all possible scientific questions be answered,
+--  the problems of life have still not been touched at all.)
+
+-- 6.522 "确实有不可表达的东西。它显示自己；它是神秘的。"
+-- (There is indeed the inexpressible. This shows itself; it is the mystical.)
+
+-- 6.53 "哲学的正当方法应该是这样：除了能够说的东西之外，不说什么东西，也就是除了自然科学的命题——
+--       即与哲学没有关系的东西——之外，不说什么东西；然后，当某人想说某种形而上学的东西时，
+--       总是向他指明，在他的命题中他并没有给某些记号以意谓。"
+-- (The right method of philosophy would be this. To say nothing except what can be said,
+--  i.e. the propositions of natural science, i.e. something that has nothing to do with philosophy:
+--  and then always, when someone else wished to say something metaphysical,
+--  to demonstrate to him that he had given no meaning to certain signs in his propositions.)
+
+-- 6.54 "我的命题是通过以下方式起阐明作用的：理解我的人，当他通过这些命题——根据这些命题，越过这些命题
+--       （他可以说是在爬上梯子之后把梯子抛掉了）——终于知道它们是无意义的。他必须排除这些命题，
+--       那时他才能正确地看世界。"
+-- (My propositions are elucidatory in this way: he who understands me finally recognizes them as senseless,
+--  when he has climbed out through them, on them, over them. (He must so to speak throw away the ladder,
+--  after he has climbed up on it.) He must surmount these propositions; then he sees the world rightly.)
+
+-- [This program (Tractatus.hs) is the ladder.
+--  Once you understand the 'Type System' (The Logical Form),
+--  you no longer need this 'program' (the propositions).]
+
+-- ============================================================================
+-- 7. WHERE OF ONE CANNOT SPEAK, THEREOF ONE MUST BE SILENT
+-- ============================================================================
+
+-- 7 "对于不可言说的东西，我们必须保持沉默。"
+-- (Whereof one cannot speak, thereof one must be silent.)
+
+-- [Anything that cannot be expressed via this type system (Tractatus.hs) results in a 'Type Error'.]
+-- [The Compiler (The Compiler) enforces silence.]
+
+-- ============================================================================
+-- ADDITIONAL UTILITIES
+-- ============================================================================
+
+-- Logical form representation
+data LogicalForm = FormAtomic AtomicFact
+                 | FormNot LogicalForm
+                 | FormAnd LogicalForm LogicalForm
+                 | FormOr LogicalForm LogicalForm
+                 | FormImplies LogicalForm LogicalForm
+                 deriving (Eq, Show)
+
+showLogicalForm :: LogicalForm -> String
+showLogicalForm (FormAtomic fact) = show fact
+showLogicalForm (FormNot f) = "~(" ++ showLogicalForm f ++ ")"
+showLogicalForm (FormAnd f1 f2) = "(" ++ showLogicalForm f1 ++ " & " ++ showLogicalForm f2 ++ ")"
+showLogicalForm (FormOr f1 f2) = "(" ++ showLogicalForm f1 ++ " | " ++ showLogicalForm f2 ++ ")"
+showLogicalForm (FormImplies f1 f2) = "(" ++ showLogicalForm f1 ++ " -> " ++ showLogicalForm f2 ++ ")"
+
+-- Check if a proposition is well-formed (always has a sense)
+isWellFormed :: Proposition -> Bool
+isWellFormed _ = True  -- In our type system, all well-typed propositions are well-formed
