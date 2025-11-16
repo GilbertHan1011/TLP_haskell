@@ -1,11 +1,3 @@
--- Main.hs
--- 总览：执行与分析
--- (Overview: Execution and Analysis)
---
--- 现在我们可以把所有东西放在一起，清晰地展示 TLP 的核心论点。
---
--- 改进：使用新的构造函数（Apple 而不是 apple，John 而不是 john）
-
 module Main where
 
 import Tractatus.CoreTypes

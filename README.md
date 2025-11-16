@@ -10,7 +10,6 @@
 
 - **对象类型**：`SpatialObject`, `Color`, `Person`, `Time`
 - **简单对象**：使用数据构造函数（如 `Apple`, `Table`, `John`, `Mary`, `Red`, `Green` 等）
-- **关键改进**：使用数据构造函数作为"简单对象"，消除了 `undefined` 的问题。"名称"和"对象"现在是统一的。
 
 ### 2. `Tractatus/Logic.hs` - 逻辑语法：原子事实
 
@@ -24,8 +23,6 @@
   - `Hates :: Person -> Person -> AtomicFact`
   - `Knows :: Person -> Person -> AtomicFact`
   - `AtTime :: Person -> Time -> AtomicFact`
-- **关键改进**：删除了冗余的 `Relation` 类型。关系不是对象，而是逻辑形式（如 `Loves`, `Hates`, `Knows`）。
-- 使用 `deriving instance` 自动派生 `Eq`, `Ord`, `Show`（因为所有对象类型都有了正确的实例）
 
 ### 3. `Tractatus/World.hs` - 实在：世界
 
@@ -34,7 +31,6 @@
 - **TheWorld**：`AtomicFact -> Bool` 类型
 - **theRealWorld**：一个具体的世界实例
 - **worldDB**：使用 `Set` 存储存在的原子事实
-- **关键改进**：现在可以正确区分不同的事实了。`(IsOn Apple Table)` 不再等于 `(IsOn Book Chair)`。
 
 ### 4. `Tractatus/Language.hs` - 语言：命题
 
@@ -85,40 +81,7 @@ senselessFact = Loves Apple Table  -- 类型错误！
 
 那些在所有可能的世界中 `eval` 结果都为 `True` 的命题（即重言式）。
 
-## 关键改进
 
-### 改进一：使用数据构造函数作为"简单对象"
-
-**问题**：之前的实现使用 `undefined`，导致"名称"与"对象"的根本断裂。
-
-**解决方案**：使用数据构造函数（如 `data Color = Red | Green | Blue | Yellow`），使得"名称"和"对象"统一。`Red` 就是 `Red`，不再是 `undefined`。
-
-**好处**：
-- 消灭了 `undefined` 的问题
-- "名称"和"对象"现在是统一的
-- `Eq` 实例正确了：`(IsOn Apple Table)` 现在可以被正确地与 `(IsOn Book Chair)` 区分开
-- `worldDB` 可以正常工作了
-
-### 改进二：简化 AtomicFact GADT（消除冗余的"关系"）
-
-**问题**：之前的实现将"关系"降格为了一个"对象"（`data Relation`），这在哲学上是令人困惑的。
-
-**解决方案**：删除了 `Relation` 类型和相关的 `Relates`、`StandsIn` 构造器。关系不是对象，而是逻辑形式（如 `Loves`, `Hates`, `Knows`）。
-
-**好处**：
-- 更符合 TLP 2.01："原子事实是对象的结合"
-- "爱"不是像 `john` 或 `apple` 那样的"事物"或"对象"；它是 `john` 和 `mary` 之间的一种"结合方式"或"结构"
-- `Loves` 本身就已经是逻辑形式了
-
-### 改进三：自动派生 Eq, Ord, Show
-
-**问题**：之前被迫编写简化的 `Eq` 实例，导致所有相同构造器的原子事实都被认为是相等的。
-
-**解决方案**：使用 `deriving instance` 自动派生 `Eq`, `Ord`, `Show`，因为 `CoreTypes.hs` 中的所有对象现在都有了正确的 `Eq`, `Ord`, `Show` 实例。
-
-**好处**：
-- `worldDB` 现在可以正确区分不同的事实
-- 不再有"不可分辨性"的问题
 
 ## 编译和运行
 
